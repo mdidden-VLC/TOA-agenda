@@ -1,1 +1,192 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practicum & TOA Planner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
 
+    <nav class="bg-blue-700 text-white p-4 shadow-md">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">🧪 Practicum & TOA Portal</h1>
+            <div class="space-x-2">
+                <button onclick="showTab('docent')" id="tab-docent" class="px-4 py-2 bg-blue-800 rounded font-semibold">Docent Formulier</button>
+                <button onclick="showTab('toa')" id="tab-toa" class="px-4 py-2 bg-blue-600 rounded font-semibold hover:bg-blue-800">TOA Dashboard</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-6">
+        
+        <!-- DOCENT FORMULIER -->
+        <div id="view-docent" class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Practicum Aanvragen</h2>
+            <form id="requestForm" onsubmit="submitForm(event)" class="space-y-4">
+                <div>
+                    <label class="block font-medium text-gray-700">E-mailadres Docent</label>
+                    <input type="email" id="docent_email" required class="w-full border rounded p-2 mt-1">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium text-gray-700">Datum</label>
+                        <input type="date" id="datum" required class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700">Lesuur</label>
+                        <select id="lesuur" required class="w-full border rounded p-2 mt-1">
+                            <option value="1">Lesuur 1 (08:30 - 09:15)</option>
+                            <option value="2">Lesuur 2 (09:15 - 10:00)</option>
+                            <option value="3">Lesuur 3 (10:20 - 11:05)</option>
+                            <option value="4">Lesuur 4 (11:05 - 11:50)</option>
+                            <option value="5">Lesuur 5 (12:20 - 13:05)</option>
+                            <option value="6">Lesuur 6 (13:05 - 13:50)</option>
+                            <option value="7">Lesuur 7 (13:50 - 14:35)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium text-gray-700">Vak & Klas</label>
+                        <input type="text" id="vak_klas" placeholder="bijv. Bio 3H1" required class="w-full border rounded p-2 mt-1">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-gray-700">Lokaal</label>
+                        <input type="text" id="lokaal" placeholder="bijv. 101" required class="w-full border rounded p-2 mt-1">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-medium text-gray-700">Omschrijving / Materialen</label>
+                    <textarea id="details" rows="3" required class="w-full border rounded p-2 mt-1"></textarea>
+                </div>
+                <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">Verzenden</button>
+            </form>
+            <div id="formAlert" class="mt-4 p-3 rounded hidden"></div>
+        </div>
+
+        <!-- TOA DASHBOARD -->
+        <div id="view-toa" class="bg-white p-6 rounded-lg shadow-md hidden">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">TOA Inzet Overzicht</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="p-3">Datum / Uur</th>
+                            <th class="p-3">Docent</th>
+                            <th class="p-3">Vak/Klas</th>
+                            <th class="p-3">Lokaal</th>
+                            <th class="p-3">Details</th>
+                            <th class="p-3">Toegewezen TOA</th>
+                            <th class="p-3">Agenda Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="toaTableBody">
+                        <tr><td colspan="7" class="p-4 text-center text-gray-500">Laden...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/a/macros/vlietlandcollege.nl/s/AKfycbwieV54P8HGNch4RTYeN1y2kzD-MrFJiy_rIBkzabat9qxplW_AdjwGAgjJGuFQgp15/exec"; 
+
+        function showTab(tab) {
+            document.getElementById('view-docent').classList.toggle('hidden', tab !== 'docent');
+            document.getElementById('view-toa').classList.toggle('hidden', tab !== 'toa');
+            if (tab === 'toa') loadRequests();
+        }
+
+        async function submitForm(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.innerText = "Bezig met verzenden...";
+            btn.disabled = true;
+
+            const payload = {
+                action: "create",
+                docent_email: document.getElementById('docent_email').value,
+                datum: document.getElementById('datum').value,
+                lesuur: document.getElementById('lesuur').value,
+                vak_klas: document.getElementById('vak_klas').value,
+                lokaal: document.getElementById('lokaal').value,
+                details: document.getElementById('details').value
+            };
+
+            await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+
+            const alert = document.getElementById('formAlert');
+            alert.classList.remove('hidden');
+            alert.className = "mt-4 p-3 bg-green-100 text-green-700 rounded";
+            alert.innerText = "Aanvraag succesvol verzonden!";
+            document.getElementById('requestForm').reset();
+            btn.innerText = "Verzenden";
+            btn.disabled = false;
+        }
+
+        async function loadRequests() {
+            const res = await fetch(API_URL);
+            const requests = await res.json();
+            const tbody = document.getElementById('toaTableBody');
+            tbody.innerHTML = '';
+
+            requests.forEach(req => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b hover:bg-gray-50";
+
+                const isSynced = req.Status === "Gekoppeld";
+                const badge = isSynced 
+                    ? `<span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded">Gekoppeld</span>`
+                    : `<span class="bg-yellow-100 text-yellow-800 text-xs font-semibold px-2 py-1 rounded">Open</span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3"><strong>${req.Datum}</strong><br><span class="text-xs text-gray-500">Lesuur ${req.Lesuur}</span></td>
+                    <td class="p-3">${req.Docent}</td>
+                    <td class="p-3">${req.Vak_Klas}</td>
+                    <td class="p-3">${req.Lokaal}</td>
+                    <td class="p-3 text-sm text-gray-600 max-w-xs">${req.Details}</td>
+                    <td class="p-3">
+                        <select onchange="assignTOA(${req.ID}, '${req.Datum}', ${req.Lesuur}, '${req.Docent}', '${req.Vak_Klas}', '${req.Lokaal}', '${encodeURIComponent(req.Details)}', this.value)" class="border rounded p-1 text-sm bg-white">
+                            <option value="">-- Kies TOA --</option>
+                            <option value="TOA 1" ${req.TOA === 'TOA 1' ? 'selected' : ''}>TOA 1</option>
+                            <option value="TOA 2" ${req.TOA === 'TOA 2' ? 'selected' : ''}>TOA 2</option>
+                            <option value="TOA 3" ${req.TOA === 'TOA 3' ? 'selected' : ''}>TOA 3</option>
+                        </select>
+                    </td>
+                    <td class="p-3">${badge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function assignTOA(id, datum, lesuur, docent, vak_klas, lokaal, detailsEncoded, toaName) {
+            if (!toaName) return;
+
+            const payload = {
+                action: "assign",
+                id: id,
+                datum: datum,
+                lesuur: lesuur,
+                docent_email: docent,
+                vak_klas: vak_klas,
+                lokaal: lokaal,
+                details: decodeURIComponent(detailsEncoded),
+                toa: toaName
+            };
+
+            await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+
+            alert(`Toegewezen aan ${toaName}. Agendapunt wordt aangemaakt.`);
+            loadRequests();
+        }
+    </script>
+</body>
+</html>
